@@ -41,7 +41,7 @@ jobs:
 
       - name: Set up Cachix cache
         run: |
-          cachix use your-cachix-cache-name # Replace with your Cachix cache name
+          cachix use age
 
       - name: Build binary
         run: |

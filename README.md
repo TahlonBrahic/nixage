@@ -21,139 +21,11 @@ $ tar cvz ~/data | age -r age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9
 $ age --decrypt -i key.txt data.tar.gz.age > data.tar.gz
 ```
 
-📜 The format specification is at [age-encryption.org/v1](https://age-encryption.org/v1). age was designed by [@Benjojo12](https://twitter.com/Benjojo12) and [@FiloSottile](https://twitter.com/FiloSottile).
-
-📬 Follow the maintenance of this project by subscribing to [Maintainer Dispatches](https://filippo.io/newsletter)!
-
-🦀 An alternative interoperable Rust implementation is available at [github.com/str4d/rage](https://github.com/str4d/rage).
-
 🔑 Hardware PIV tokens such as YubiKeys are supported through the [age-plugin-yubikey](https://github.com/str4d/age-plugin-yubikey) plugin.
 
 ✨ For more plugins, implementations, tools, and integrations, check out the [awesome age](https://github.com/FiloSottile/awesome-age) list.
 
-💬 The author pronounces it `[aɡe̞]` [with a hard *g*](https://translate.google.com/?sl=it&text=aghe), like GIF, and is always spelled lowercase.
-
-## Installation
-
-<table>
-    <tr>
-        <td>Homebrew (macOS or Linux)</td>
-        <td>
-            <code>brew install age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>MacPorts</td>
-        <td>
-            <code>port install age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>Alpine Linux v3.15+</td>
-        <td>
-            <code>apk add age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>Arch Linux</td>
-        <td>
-            <code>pacman -S age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>Debian 12+ (Bookworm)</td>
-        <td>
-            <code>apt install age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>Debian 11 (Bullseye)</td>
-        <td>
-            <code>apt install age/bullseye-backports</code>
-            (<a href="https://backports.debian.org/Instructions/#index2h2">enable backports</a> for age v1.0.0+)
-        </td>
-    </tr>
-    <tr>
-        <td>Fedora 33+</td>
-        <td>
-            <code>dnf install age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>Gentoo Linux</td>
-        <td>
-            <code>emerge app-crypt/age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>NixOS / Nix</td>
-        <td>
-            <code>nix-env -i age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>openSUSE Tumbleweed</td>
-        <td>
-            <code>zypper install age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>Ubuntu 22.04+</td>
-        <td>
-            <code>apt install age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>Void Linux</td>
-        <td>
-            <code>xbps-install age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>FreeBSD</td>
-        <td>
-            <code>pkg install age</code> (security/age)
-        </td>
-    </tr>
-    <tr>
-        <td>OpenBSD 6.7+</td>
-        <td>
-            <code>pkg_add age</code> (security/age)
-        </td>
-    </tr>
-    <tr>
-        <td>Chocolatey (Windows)</td>
-        <td>
-            <code>choco install age.portable</code>
-        </td>
-    </tr>
-    <tr>
-        <td>Scoop (Windows)</td>
-        <td>
-            <code>scoop bucket add extras && scoop install age</code>
-        </td>
-    </tr>
-    <tr>
-        <td>pkgx</td>
-        <td>
-            <code>pkgx install age</code>
-        </td>
-    </tr>
-</table>
-
-On Windows, Linux, macOS, and FreeBSD you can use the pre-built binaries.
-
-```
-https://dl.filippo.io/age/latest?for=linux/amd64
-https://dl.filippo.io/age/v1.1.1?for=darwin/arm64
-...
-```
-
 If your system has [a supported version of Go](https://go.dev/dl/), you can build from source.
-
-```
-go install filippo.io/age/cmd/...@latest
-```
 
 Help from new packagers is very welcome.
 
@@ -165,30 +37,6 @@ transparency: you can cryptographically verify that every proof is logged in a
 public append-only log, so you can hold the age project accountable for every
 binary release we ever produced. This is similar to what the [Go Checksum
 Database](https://go.dev/blog/module-mirror-launch) provides.
-
-```
-cat << EOF > age-sigsum-key.pub
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM1WpnEswJLPzvXJDiswowy48U+G+G1kmgwUE2eaRHZG
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAz2WM5CyPLqiNjk7CLl4roDXwKhQ0QExXLebukZEZFS
-EOF
-cat << EOF > sigsum-trust-policy.txt
-log 154f49976b59ff09a123675f58cb3e346e0455753c3c3b15d465dcb4f6512b0b https://poc.sigsum.org/jellyfish
-witness poc.sigsum.org/nisse 1c25f8a44c635457e2e391d1efbca7d4c2951a0aef06225a881e46b98962ac6c
-witness rgdd.se/poc-witness  28c92a5a3a054d317c86fc2eeb6a7ab2054d6217100d0be67ded5b74323c5806
-group  demo-quorum-rule all poc.sigsum.org/nisse rgdd.se/poc-witness
-quorum demo-quorum-rule
-EOF
-
-curl -JLO "https://dl.filippo.io/age/v1.2.0?for=darwin/arm64"
-curl -JLO "https://dl.filippo.io/age/v1.2.0?for=darwin/arm64&proof"
-
-go install sigsum.org/sigsum-go/cmd/sigsum-verify@v0.8.0
-sigsum-verify -k age-sigsum-key.pub -p sigsum-trust-policy.txt \
-    age-v1.2.0-darwin-arm64.tar.gz.proof < age-v1.2.0-darwin-arm64.tar.gz
-```
-
-You can learn more about what's happening above in the [Sigsum
-docs](https://www.sigsum.org/getting-started/).
 
 ## Usage
 

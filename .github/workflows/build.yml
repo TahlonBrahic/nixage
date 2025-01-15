@@ -1,63 +1,46 @@
-name: Build and upload binaries
-
+name: "Build and populate cache"
 on:
   pull_request:
   push:
     branches:
       - main
-
+  schedule:
+    - cron: "30 7 * * *"
+  workflow_dispatch:
 jobs:
-  build:
-    name: Build binaries with Nix
+  tests:
+    strategy:
+      matrix:
+        cachixName:
+          - age
+        nixPath:
+          - nixpkgs=https://github.com/NixOS/nixpkgs/archive/refs/heads/nixos-24.11.tar.gz
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Nix
-        run: |
-          curl -L https://nixos.org/nix/install | sh
-          source $HOME/.nix-profile/etc/profile.d/nix.sh
-          nix --version
-
-      - name: Generate Git version
-        id: version
-        run: |
-          VERSION=$(git describe --tags --always || echo "v0.0.0-$(git rev-parse --short HEAD)")
-          echo "GIT_VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Build with Nix
-        run: |
-          source $HOME/.nix-profile/etc/profile.d/nix.sh
-          nix-build --argstr version ${{ env.GIT_VERSION }}
-
-      - name: Package and Upload Artifacts
-        run: |
-          VERSION="${{ env.GIT_VERSION }}"
-          tar -cvzf "age-$VERSION.tar.gz" -C result bin/age
-          mv "age-$VERSION.tar.gz" age.tar.gz
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Install nix
+        uses: cachix/install-nix-action@v30
         with:
-          name: age-binary
-          path: age.tar.gz
-
-  upload:
-    name: Upload release binaries
-    if: github.event_name == 'release'
-    needs: build
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download workflow artifacts
-        uses: actions/download-artifact@v4
+          nix_path: "${{ matrix.nixPath }}"
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+      - name: Show nixpkgs version
+        run: nix-instantiate --eval -E '(import <nixpkgs> {}).lib.version'
+      - name: Setup cachix
+        uses: cachix/cachix-action@v15
         with:
-          pattern: age-binary
-
-      - name: Upload release artifacts
-        run: gh release upload "$GITHUB_REF_NAME" age-*
-        env:
-          GH_REPO: ${{ github.repository }}
-          GH_TOKEN: ${{ github.token }}
+          name: ${{ matrix.cachixName }}
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+      - name: Check evaluation
+        run: |
+          nix-env -f . -qa \* --meta --xml \
+            --allowed-uris https://static.rust-lang.org \
+            --option restrict-eval true \
+            --option allow-import-from-derivation true \
+            --drv-path --show-trace \
+            -I nixpkgs=$(nix-instantiate --find-file nixpkgs) \
+            -I $PWD
+      - name: Build nix packages
+        run: nix shell -f '<nixpkgs>' nix-build-uncached -c nix-build-uncached ci.nix -A cacheOutputs

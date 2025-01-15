@@ -1,16 +1,14 @@
 ---
 name: Bug report 🐞
 about: Did you encounter a bug in this implementation?
-title: ''
-labels: ''
-assignees: ''
-
+title: ""
+labels: ""
+assignees: ""
 ---
 
 ## Environment
 
-* OS:
-* age version:
+- age version:
 
 ## What were you trying to do
 

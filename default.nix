@@ -1,7 +1,9 @@
 {
+  nixpkgs ? import <nixpkgs> {},
   lib,
-  buildGoModule,
   fetchFromGitHub,
+  buildGoModule,
+  stdenv,
   goPackages,
   ...
 }: let

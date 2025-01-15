@@ -8,47 +8,40 @@ on:
 
 jobs:
   build:
-    name: Build binaries
+    name: Build binaries with Nix
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - { GOOS: linux, GOARCH: amd64 }
-          - { GOOS: linux, GOARCH: arm, GOARM: 6 }
-          - { GOOS: linux, GOARCH: arm64 }
-          - { GOOS: darwin, GOARCH: amd64 }
-          - { GOOS: darwin, GOARCH: arm64 }
-          - { GOOS: freebsd, GOARCH: amd64 }
-
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: 1.x
-      - run: |
-          VERSION="$(git describe --tags)"
-          DIR="$(mktemp -d)"
-          mkdir "$DIR/age"
-          cp LICENSE "$RUNNER_TEMP/LICENSE"  # Retaining LICENSE copying
-          echo -e "\n---\n" >> "$RUNNER_TEMP/LICENSE"
-          curl -L "https://go.dev/LICENSE?m=text" >> "$RUNNER_TEMP/LICENSE"
-          cp "$RUNNER_TEMP/LICENSE" "$DIR/age"
-          go build -o "$DIR/age" -ldflags "-X main.Version=$VERSION" -trimpath ./cmd/...
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-          if [ "$GOOS" == "windows" ]; then
-            echo "Skipping Windows packaging"
-          else
-            if [ "$GOOS" == "darwin" ]; then
-              tar -cvzf "age-$VERSION-$GOOS-$GOARCH.tar.gz" -C "$DIR" age
-            else
-              tar -cvzf "age-$VERSION-$GOOS-$GOARCH.tar.gz" -C "$DIR" age
-            fi
-          fi
+      - name: Set up Nix
+        run: |
+          curl -L https://nixos.org/nix/install | sh
+          source $HOME/.nix-profile/etc/profile.d/nix.sh
+          nix --version
 
-      - uses: actions/upload-artifact@v4
+      - name: Generate Git version
+        id: version
+        run: |
+          VERSION=$(git describe --tags --always || echo "v0.0.0-$(git rev-parse --short HEAD)")
+          echo "GIT_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Build with Nix
+        run: |
+          source $HOME/.nix-profile/etc/profile.d/nix.sh
+          nix-build --argstr version ${{ env.GIT_VERSION }}
+
+      - name: Package and Upload Artifacts
+        run: |
+          VERSION="${{ env.GIT_VERSION }}"
+          tar -cvzf "age-$VERSION.tar.gz" -C result bin/age
+          mv "age-$VERSION.tar.gz" age.tar.gz
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: age-binaries-${{ matrix.GOOS }}-${{ matrix.GOARCH }}
-          path: age-*
+          name: age-binary
+          path: age.tar.gz
 
   upload:
     name: Upload release binaries
@@ -61,8 +54,7 @@ jobs:
       - name: Download workflow artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: age-binaries-*
-          merge-multiple: true
+          pattern: age-binary
 
       - name: Upload release artifacts
         run: gh release upload "$GITHUB_REF_NAME" age-*

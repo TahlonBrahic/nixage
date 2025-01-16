@@ -1,46 +1,64 @@
-name: "Build and populate cache"
+name: Build and upload binaries
 on:
-  pull_request:
+  release:
+    types: [published]
   push:
-    branches:
-      - main
-  schedule:
-    - cron: "30 7 * * *"
-  workflow_dispatch:
+  pull_request:
+permissions:
+  contents: read
 jobs:
-  tests:
+  build:
+    name: Build binaries
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        cachixName:
-          - age
-        nixPath:
-          - nixpkgs=https://github.com/NixOS/nixpkgs/archive/refs/heads/nixos-24.11.tar.gz
-    runs-on: ubuntu-latest
+        include:
+          - { GOOS: linux, GOARCH: amd64 }
+          - { GOOS: linux, GOARCH: arm, GOARM: 6 }
+          - { GOOS: linux, GOARCH: arm64 }
+          - { GOOS: darwin, GOARCH: amd64 }
+          - { GOOS: darwin, GOARCH: arm64 }
     steps:
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.x
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install nix
-        uses: cachix/install-nix-action@v30
         with:
-          nix_path: "${{ matrix.nixPath }}"
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-      - name: Show nixpkgs version
-        run: nix-instantiate --eval -E '(import <nixpkgs> {}).lib.version'
-      - name: Setup cachix
-        uses: cachix/cachix-action@v15
-        with:
-          name: ${{ matrix.cachixName }}
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-      - name: Check evaluation
+          fetch-depth: 0
+      - name: Build binary
         run: |
-          nix-env -f . -qa \* --meta --xml \
-            --allowed-uris https://static.rust-lang.org \
-            --option restrict-eval true \
-            --option allow-import-from-derivation true \
-            --drv-path --show-trace \
-            -I nixpkgs=$(nix-instantiate --find-file nixpkgs) \
-            -I $PWD
-      - name: Build nix packages
-        run: nix shell -f '<nixpkgs>' nix-build-uncached -c nix-build-uncached ci.nix -A cacheOutputs
+          VERSION="$(git describe --tags)"
+          DIR="$(mktemp -d)"
+          mkdir "$DIR/age"
+          go build -o "$DIR/age" -ldflags "-X main.Version=$VERSION" -trimpath ./cmd/...
+          tar -cvzf "age-$VERSION-$GOOS-$GOARCH.tar.gz" -C "$DIR" age
+        env:
+          CGO_ENABLED: 0
+          GOOS: ${{ matrix.GOOS }}
+          GOARCH: ${{ matrix.GOARCH }}
+          GOARM: ${{ matrix.GOARM }}
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: age-binaries-${{ matrix.GOOS }}-${{ matrix.GOARCH }}
+          path: age-*
+  upload:
+    name: Upload release binaries
+    if: github.event_name == 'release'
+    needs: build
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download workflow artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: age-binaries-*
+          merge-multiple: true
+      - name: Upload release artifacts
+        run: gh release upload "$GITHUB_REF_NAME" age-*
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}

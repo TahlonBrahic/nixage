@@ -1,7 +1,6 @@
 {pkgs ? import <nixpkgs> {}}:
 with builtins; let
   concatMap = builtins.concatMap or (f: xs: concatLists (map f xs));
-
   flattenPkgs = s: let
     f = p:
       if shouldRecurseForDerivations p
@@ -20,8 +19,7 @@ with builtins; let
     flattenPkgs
     (listToAttrs
       (map (n: nameValuePair n ageAttrs.${n})
-        (filter (n: !isReserved n)
-          (attrNames ageAttrs))));
+        (attrNames ageAttrs)));
 in {
   buildOutputs = concatMap outputsOf agePkgs;
   cacheOutputs = concatMap outputsOf agePkgs;

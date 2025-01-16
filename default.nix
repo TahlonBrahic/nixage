@@ -1,48 +1,25 @@
 {pkgs ? import <nixpkgs> {}}: let
-  inherit (pkgs) lib buildGoModule fetchFromGitHub installShellFiles;
+  goVersion = "1.23.3";
+  version = "0.0.1";
+  pname = "nixage";
+  src = ./.;
 in
-  buildGoModule rec {
-    pname = "nixage";
-    version = "0.0.1";
+  pkgs.stdenv.mkDerivation rec {
+    inherit goVersion version pname src;
 
-    src = fetchFromGitHub {
-      owner = "TahlonBrahic";
-      repo = "nixage";
-      rev = "v${version}";
-      hash = "";
-    };
+    buildInputs = [pkgs.go];
 
-    vendorHash = "";
+    GO111MODULE = "on";
 
-    ldflags = [
-      "-s"
-      "-w"
-      "-X main.Version=${version}"
-    ];
-
-    nativeBuildInputs = [installShellFiles];
-
-    doInstallCheck = true;
-    installCheckPhase = ''
-      if [[ "$("$out/bin/${pname}" --version)" == "${version}" ]]; then
-        echo '${pname} smoke check passed'
-      else
-        echo '${pname} smoke check failed'
-        return 1
-      fi
+    buildPhase = ''
+      export HOME=$(pwd)
+         mkdir -p $out/bin
+         go build -o $out/bin -ldflags "-X main.Version=${version}" -trimpath ./cmd/...
     '';
 
-    # plugin test is flaky, see https://github.com/FiloSottile/age/issues/517
-    checkFlags = [
-      "-skip"
-      "TestScript/plugin"
-    ];
-
-    meta = with lib; {
-      changelog = "https://github.com/TahlonBrahic/nixage/releases/tag/v${version}";
+    meta = with pkgs.lib; {
       description = "Modern encryption tool with small explicit keys";
       license = licenses.bsd3;
-      mainProgram = "nixage";
       maintainers = [];
     };
   }

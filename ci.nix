@@ -21,7 +21,7 @@ with builtins; let
     value = v;
   };
 
-  outputsOf = p: map (o: p.${o}) p.outputs;
+  outputsOf = p: map (o: p.${o}) p.out;
 
   ageAttrs = pkgs.callPackage ./default.nix {inherit pkgs;};
 

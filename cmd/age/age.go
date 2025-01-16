@@ -7,9 +7,9 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"filippo.io/age/tui"
 	"flag"
 	"fmt"
+	"github.com/TahlonBrahic/nixage/tui"
 	"io"
 	"os"
 	"path/filepath"
@@ -17,10 +17,10 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"filippo.io/age"
-	"filippo.io/age/agessh"
-	"filippo.io/age/armor"
-	"filippo.io/age/plugin"
+	"github.com/TahlonBrahic/nixage"
+	"github.com/TahlonBrahic/nixage/agessh"
+	"github.com/TahlonBrahic/nixage/armor"
+	"github.com/TahlonBrahic/nixage/plugin"
 	"golang.org/x/term"
 )
 

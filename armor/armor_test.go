@@ -19,9 +19,9 @@ import (
 	"strings"
 	"testing"
 
-	"filippo.io/age"
-	"filippo.io/age/armor"
-	"filippo.io/age/internal/format"
+	"github.com/TahlonBrahic/nixage"
+	"github.com/TahlonBrahic/nixage/armor"
+	"github.com/TahlonBrahic/nixage/internal/format"
 )
 
 func ExampleNewWriter() {

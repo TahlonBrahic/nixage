@@ -6,11 +6,11 @@ package main
 
 import (
 	"bufio"
-	"filippo.io/age/tui"
+	"github.com/TahlonBrahic/nixage/tui"
 	"os"
 	"testing"
 
-	"filippo.io/age"
+	"github.com/TahlonBrahic/nixage"
 	"github.com/rogpeppe/go-internal/testscript"
 )
 

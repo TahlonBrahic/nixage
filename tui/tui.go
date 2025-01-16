@@ -22,8 +22,8 @@ import (
 	"os"
 	"runtime"
 
-	"filippo.io/age/armor"
-	"filippo.io/age/plugin"
+	"github.com/TahlonBrahic/nixage/armor"
+	"github.com/TahlonBrahic/nixage/plugin"
 	"golang.org/x/term"
 )
 
@@ -36,7 +36,7 @@ func Printf(format string, v ...interface{}) {
 
 func Errorf(format string, v ...interface{}) {
 	l.Printf("age: error: "+format, v...)
-	l.Printf("age: report unexpected or unhelpful errors at https://filippo.io/age/report")
+	l.Printf("age: report unexpected or unhelpful errors at https://github.com/TahlonBrahic/nixage/report")
 	Exit(1)
 }
 
@@ -49,7 +49,7 @@ func ErrorWithHint(error string, hints ...string) {
 	for _, hint := range hints {
 		l.Printf("age: hint: %s", hint)
 	}
-	l.Printf("age: report unexpected or unhelpful errors at https://filippo.io/age/report")
+	l.Printf("age: report unexpected or unhelpful errors at https://github.com/TahlonBrahic/nixage/report")
 	Exit(1)
 }
 

@@ -1,6 +1,9 @@
 {pkgs ? import <nixpkgs> {}}:
 with builtins; let
   concatMap = builtins.concatMap or (f: xs: concatLists (map f xs));
+
+  isDerivation = p: isAttrs p && p ? type && p.type == "derivation";
+
   flattenPkgs = s: let
     f = p:
       if shouldRecurseForDerivations p

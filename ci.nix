@@ -11,6 +11,11 @@ with builtins; let
   in
     concatMap f (attrValues s);
 
+  nameValuePair = n: v: {
+    name = n;
+    value = v;
+  };
+
   outputsOf = p: map (o: p.${o}) p.outputs;
 
   ageAttrs = pkgs.callPackage ./default.nix {inherit pkgs;};

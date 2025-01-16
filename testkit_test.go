@@ -17,10 +17,10 @@ import (
 	"strings"
 	"testing"
 
-	"filippo.io/age"
-	"filippo.io/age/armor"
-	"filippo.io/age/internal/format"
-	"filippo.io/age/internal/stream"
+	"github.com/TahlonBrahic/nixage"
+	"github.com/TahlonBrahic/nixage/armor"
+	"github.com/TahlonBrahic/nixage/internal/format"
+	"github.com/TahlonBrahic/nixage/internal/stream"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
 

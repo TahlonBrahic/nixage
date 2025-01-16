@@ -7,16 +7,16 @@ package main
 import (
 	"bufio"
 	"encoding/base64"
-	"filippo.io/age/tui"
 	"fmt"
+	"github.com/TahlonBrahic/nixage/tui"
 	"io"
 	"os"
 	"strings"
 
-	"filippo.io/age"
-	"filippo.io/age/agessh"
-	"filippo.io/age/armor"
-	"filippo.io/age/plugin"
+	"github.com/TahlonBrahic/nixage"
+	"github.com/TahlonBrahic/nixage/agessh"
+	"github.com/TahlonBrahic/nixage/armor"
+	"github.com/TahlonBrahic/nixage/plugin"
 	"golang.org/x/crypto/cryptobyte"
 	"golang.org/x/crypto/ssh"
 )

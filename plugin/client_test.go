@@ -14,8 +14,8 @@ import (
 	"runtime"
 	"testing"
 
-	"filippo.io/age"
-	"filippo.io/age/internal/bech32"
+	"github.com/TahlonBrahic/nixage"
+	"github.com/TahlonBrahic/nixage/internal/bech32"
 )
 
 func TestMain(m *testing.M) {

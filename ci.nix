@@ -32,7 +32,7 @@ with builtins; let
 
   outputsOf = p: map (o: p.${o}) p.outputs;
 
-  ageAttrs = import ./default.nix {inherit pkgs;};
+  ageAttrs = pkgs.callPackage ./default.nix {inherit pkgs;};
 
   agePkgs =
     flattenPkgs

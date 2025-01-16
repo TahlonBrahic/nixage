@@ -11,6 +11,8 @@ with builtins; let
   in
     concatMap f (attrValues s);
 
+  shouldRecurseForDerivations = p: isAttrs p && p.recurseForDerivations or false;
+
   nameValuePair = n: v: {
     name = n;
     value = v;

@@ -22,8 +22,8 @@ import (
 	"os"
 	"runtime"
 
-	"filippo.io/age/armor"
-	"filippo.io/age/plugin"
+	"github.com/TahlonBrahic/nixage/armor"
+	"github.com/TahlonBrahic/nixage/plugin"
 	"golang.org/x/term"
 )
 

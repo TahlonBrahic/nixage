@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"filippo.io/age"
+	"github.com/TahlonBrahic/nixage"
 	"github.com/rogpeppe/go-internal/testscript"
 )
 

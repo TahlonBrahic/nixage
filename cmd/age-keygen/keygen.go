@@ -13,7 +13,7 @@ import (
 	"runtime/debug"
 	"time"
 
-	"filippo.io/age"
+	"github.com/TahlonBrahic/nixage"
 	"golang.org/x/term"
 )
 

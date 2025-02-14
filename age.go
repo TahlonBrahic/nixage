@@ -53,8 +53,8 @@ import (
 	"io"
 	"sort"
 
-	"filippo.io/age/internal/format"
-	"filippo.io/age/internal/stream"
+	"github.com/TahlonBrahic/nixage/internal/format"
+	"github.com/TahlonBrahic/nixage/internal/stream"
 )
 
 // An Identity is passed to Decrypt to unwrap an opaque file key from a

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"filippo.io/age"
+	"github.com/TahlonBrahic/nixage"
 )
 
 func ExampleEncrypt() {

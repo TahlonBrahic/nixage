@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"testing"
 
-	"filippo.io/age/internal/stream"
+	"github.com/TahlonBrahic/nixage/internal/stream"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 

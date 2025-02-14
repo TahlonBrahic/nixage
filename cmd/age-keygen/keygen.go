@@ -13,7 +13,7 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/TahlonBrahic/nixage"
+	"filippo.io/age"
 	"golang.org/x/term"
 )
 
@@ -154,7 +154,7 @@ func convert(in io.Reader, out io.Writer) {
 
 func errorf(format string, v ...interface{}) {
 	log.Printf("age-keygen: error: "+format, v...)
-	log.Fatalf("age-keygen: report unexpected or unhelpful errors at https://github.com/TahlonBrahic/nixage/report")
+	log.Fatalf("age-keygen: report unexpected or unhelpful errors at https://filippo.io/age/report")
 }
 
 func warning(msg string) {

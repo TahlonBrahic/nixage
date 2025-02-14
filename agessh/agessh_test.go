@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/TahlonBrahic/nixage/agessh"
+	"filippo.io/age/agessh"
 	"golang.org/x/crypto/ssh"
 )
 

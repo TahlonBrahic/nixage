@@ -1,4 +1,4 @@
-module github.com/TahlonBrahic/nixage
+module filippo.io/age
 
 go 1.19
 

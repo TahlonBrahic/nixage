@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/TahlonBrahic/nixage/internal/bech32"
+	"filippo.io/age/internal/bech32"
 )
 
 func TestBech32(t *testing.T) {

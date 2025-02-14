@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/TahlonBrahic/nixage/internal/bech32"
+	"filippo.io/age/internal/bech32"
 )
 
 // EncodeIdentity encodes a plugin identity string for a plugin with the given

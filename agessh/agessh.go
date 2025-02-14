@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"io"
 
+	"filippo.io/age"
+	"filippo.io/age/internal/format"
 	"filippo.io/edwards25519"
-	"github.com/TahlonBrahic/nixage"
-	"github.com/TahlonBrahic/nixage/internal/format"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/curve25519"
 	"golang.org/x/crypto/hkdf"

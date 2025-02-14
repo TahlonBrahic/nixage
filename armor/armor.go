@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/TahlonBrahic/nixage/internal/format"
+	"filippo.io/age/internal/format"
 )
 
 const (

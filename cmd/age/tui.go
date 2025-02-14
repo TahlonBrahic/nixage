@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package tui
+package main
 
 // This file implements the terminal UI of cmd/age. The rules are:
 //
@@ -22,55 +22,54 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/TahlonBrahic/nixage/armor"
-	"github.com/TahlonBrahic/nixage/plugin"
+	"filippo.io/age/armor"
+	"filippo.io/age/plugin"
 	"golang.org/x/term"
 )
 
 // l is a logger with no prefixes.
 var l = log.New(os.Stderr, "", 0)
 
-func Printf(format string, v ...interface{}) {
+func printf(format string, v ...interface{}) {
 	l.Printf("age: "+format, v...)
 }
 
-func Errorf(format string, v ...interface{}) {
+func errorf(format string, v ...interface{}) {
 	l.Printf("age: error: "+format, v...)
-	l.Printf("age: report unexpected or unhelpful errors at https://github.com/TahlonBrahic/nixage/report")
-	Exit(1)
+	l.Printf("age: report unexpected or unhelpful errors at https://filippo.io/age/report")
+	exit(1)
 }
 
-func Warningf(format string, v ...interface{}) {
+func warningf(format string, v ...interface{}) {
 	l.Printf("age: warning: "+format, v...)
 }
 
-func ErrorWithHint(error string, hints ...string) {
+func errorWithHint(error string, hints ...string) {
 	l.Printf("age: error: %s", error)
 	for _, hint := range hints {
 		l.Printf("age: hint: %s", hint)
 	}
-	l.Printf("age: report unexpected or unhelpful errors at https://github.com/TahlonBrahic/nixage/report")
-	Exit(1)
+	l.Printf("age: report unexpected or unhelpful errors at https://filippo.io/age/report")
+	exit(1)
 }
 
-// If TestOnlyPanicInsteadOfExit is true, exit will set TestOnlyDidExit and
+// If testOnlyPanicInsteadOfExit is true, exit will set testOnlyDidExit and
 // panic instead of calling os.Exit. This way, the wrapper in TestMain can
 // recover the panic and return the exit code only if it was originated in exit.
+var testOnlyPanicInsteadOfExit bool
+var testOnlyDidExit bool
 
-var TestOnlyPanicInsteadOfExit bool
-var TestOnlyDidExit bool
-
-func Exit(code int) {
-	if TestOnlyPanicInsteadOfExit {
-		TestOnlyDidExit = true
+func exit(code int) {
+	if testOnlyPanicInsteadOfExit {
+		testOnlyDidExit = true
 		panic(code)
 	}
 	os.Exit(code)
 }
 
-// ClearLine clears the current line on the terminal, or opens a new line if
+// clearLine clears the current line on the terminal, or opens a new line if
 // terminal escape codes don't work.
-func ClearLine(out io.Writer) {
+func clearLine(out io.Writer) {
 	const (
 		CUI = "\033["   // Control Sequence Introducer
 		CPL = CUI + "F" // Cursor Previous Line
@@ -87,10 +86,10 @@ func ClearLine(out io.Writer) {
 	fmt.Fprintf(out, "\r\n"+CPL+EL)
 }
 
-// WithTerminal runs f with the terminal input and output files, if available.
-// WithTerminal does not open a non-terminal stdin, so the caller does not need
+// withTerminal runs f with the terminal input and output files, if available.
+// withTerminal does not open a non-terminal stdin, so the caller does not need
 // to check stdinInUse.
-func WithTerminal(f func(in, out *os.File) error) error {
+func withTerminal(f func(in, out *os.File) error) error {
 	if runtime.GOOS == "windows" {
 		in, err := os.OpenFile("CONIN$", os.O_RDWR, 0)
 		if err != nil {
@@ -113,18 +112,18 @@ func WithTerminal(f func(in, out *os.File) error) error {
 	}
 }
 
-func PrintfToTerminal(format string, v ...interface{}) error {
-	return WithTerminal(func(_, out *os.File) error {
+func printfToTerminal(format string, v ...interface{}) error {
+	return withTerminal(func(_, out *os.File) error {
 		_, err := fmt.Fprintf(out, "age: "+format+"\n", v...)
 		return err
 	})
 }
 
-// ReadSecret reads a value from the terminal with no echo. The prompt is ephemeral.
-func ReadSecret(prompt string) (s []byte, err error) {
-	err = WithTerminal(func(in, out *os.File) error {
+// readSecret reads a value from the terminal with no echo. The prompt is ephemeral.
+func readSecret(prompt string) (s []byte, err error) {
+	err = withTerminal(func(in, out *os.File) error {
 		fmt.Fprintf(out, "%s ", prompt)
-		defer ClearLine(out)
+		defer clearLine(out)
 		s, err = term.ReadPassword(int(in.Fd()))
 		return err
 	})
@@ -134,9 +133,9 @@ func ReadSecret(prompt string) (s []byte, err error) {
 // readCharacter reads a single character from the terminal with no echo. The
 // prompt is ephemeral.
 func readCharacter(prompt string) (c byte, err error) {
-	err = WithTerminal(func(in, out *os.File) error {
+	err = withTerminal(func(in, out *os.File) error {
 		fmt.Fprintf(out, "%s ", prompt)
-		defer ClearLine(out)
+		defer clearLine(out)
 
 		oldState, err := term.MakeRaw(int(in.Fd()))
 		if err != nil {
@@ -155,18 +154,18 @@ func readCharacter(prompt string) (c byte, err error) {
 	return
 }
 
-var PluginTerminalUI = &plugin.ClientUI{
+var pluginTerminalUI = &plugin.ClientUI{
 	DisplayMessage: func(name, message string) error {
-		Printf("%s plugin: %s", name, message)
+		printf("%s plugin: %s", name, message)
 		return nil
 	},
 	RequestValue: func(name, message string, _ bool) (s string, err error) {
 		defer func() {
 			if err != nil {
-				Warningf("could not read value for age-plugin-%s: %v", name, err)
+				warningf("could not read value for age-plugin-%s: %v", name, err)
 			}
 		}()
-		secret, err := ReadSecret(message)
+		secret, err := readSecret(message)
 		if err != nil {
 			return "", err
 		}
@@ -175,12 +174,12 @@ var PluginTerminalUI = &plugin.ClientUI{
 	Confirm: func(name, message, yes, no string) (choseYes bool, err error) {
 		defer func() {
 			if err != nil {
-				Warningf("could not read value for age-plugin-%s: %v", name, err)
+				warningf("could not read value for age-plugin-%s: %v", name, err)
 			}
 		}()
 		if no == "" {
 			message += fmt.Sprintf(" (press enter for %q)", yes)
-			_, err := ReadSecret(message)
+			_, err := readSecret(message)
 			if err != nil {
 				return false, err
 			}
@@ -200,16 +199,16 @@ var PluginTerminalUI = &plugin.ClientUI{
 			case '\x03': // CTRL-C
 				return false, errors.New("user cancelled prompt")
 			default:
-				Warningf("reading value for age-plugin-%s: invalid selection %q", name, selection)
+				warningf("reading value for age-plugin-%s: invalid selection %q", name, selection)
 			}
 		}
 	},
 	WaitTimer: func(name string) {
-		Printf("waiting on %s plugin...", name)
+		printf("waiting on %s plugin...", name)
 	},
 }
 
-func BufferTerminalInput(in io.Reader) (io.Reader, error) {
+func bufferTerminalInput(in io.Reader) (io.Reader, error) {
 	buf := &bytes.Buffer{}
 	if _, err := buf.ReadFrom(ReaderFunc(func(p []byte) (n int, err error) {
 		if bytes.Contains(buf.Bytes(), []byte(armor.Footer+"\n")) {

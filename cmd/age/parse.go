@@ -8,15 +8,14 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
-	"github.com/TahlonBrahic/nixage/tui"
 	"io"
 	"os"
 	"strings"
 
-	"github.com/TahlonBrahic/nixage"
-	"github.com/TahlonBrahic/nixage/agessh"
-	"github.com/TahlonBrahic/nixage/armor"
-	"github.com/TahlonBrahic/nixage/plugin"
+	"filippo.io/age"
+	"filippo.io/age/agessh"
+	"filippo.io/age/armor"
+	"filippo.io/age/plugin"
 	"golang.org/x/crypto/cryptobyte"
 	"golang.org/x/crypto/ssh"
 )
@@ -32,7 +31,7 @@ func (gitHubRecipientError) Error() string {
 func parseRecipient(arg string) (age.Recipient, error) {
 	switch {
 	case strings.HasPrefix(arg, "age1") && strings.Count(arg, "1") > 1:
-		return plugin.NewRecipient(arg, tui.PluginTerminalUI)
+		return plugin.NewRecipient(arg, pluginTerminalUI)
 	case strings.HasPrefix(arg, "age1"):
 		return age.ParseX25519Recipient(arg)
 	case strings.HasPrefix(arg, "ssh-"):
@@ -80,7 +79,7 @@ func parseRecipientsFile(name string) ([]age.Recipient, error) {
 		if err != nil {
 			if t, ok := sshKeyType(line); ok {
 				// Skip unsupported but valid SSH public keys with a warning.
-				tui.Warningf("recipients file %q: ignoring unsupported SSH key of type %q at line %d", name, t, n)
+				warningf("recipients file %q: ignoring unsupported SSH key of type %q at line %d", name, t, n)
 				continue
 			}
 			// Hide the error since it might unintentionally leak the contents
@@ -163,14 +162,14 @@ func parseIdentitiesFile(name string) ([]age.Identity, error) {
 		return []age.Identity{&EncryptedIdentity{
 			Contents: contents,
 			Passphrase: func() (string, error) {
-				pass, err := tui.ReadSecret(fmt.Sprintf("Enter passphrase for identity file %q:", name))
+				pass, err := readSecret(fmt.Sprintf("Enter passphrase for identity file %q:", name))
 				if err != nil {
 					return "", fmt.Errorf("could not read passphrase: %v", err)
 				}
 				return string(pass), nil
 			},
 			NoMatchWarning: func() {
-				tui.Warningf("encrypted identity file %q didn't match file's recipients", name)
+				warningf("encrypted identity file %q didn't match file's recipients", name)
 			},
 		}}, nil
 
@@ -199,7 +198,7 @@ func parseIdentitiesFile(name string) ([]age.Identity, error) {
 func parseIdentity(s string) (age.Identity, error) {
 	switch {
 	case strings.HasPrefix(s, "AGE-PLUGIN-"):
-		return plugin.NewIdentity(s, tui.PluginTerminalUI)
+		return plugin.NewIdentity(s, pluginTerminalUI)
 	case strings.HasPrefix(s, "AGE-SECRET-KEY-1"):
 		return age.ParseX25519Identity(s)
 	default:
@@ -247,7 +246,7 @@ func parseSSHIdentity(name string, pemBytes []byte) ([]age.Identity, error) {
 			}
 		}
 		passphrasePrompt := func() ([]byte, error) {
-			pass, err := tui.ReadSecret(fmt.Sprintf("Enter passphrase for %q:", name))
+			pass, err := readSecret(fmt.Sprintf("Enter passphrase for %q:", name))
 			if err != nil {
 				return nil, fmt.Errorf("could not read passphrase for %q: %v", name, err)
 			}

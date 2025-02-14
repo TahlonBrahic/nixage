@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/TahlonBrahic/nixage/internal/format"
+	"filippo.io/age/internal/format"
 )
 
 func TestStanzaMarshal(t *testing.T) {

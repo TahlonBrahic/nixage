@@ -8,10 +8,10 @@
 // For most use cases, use the Encrypt and Decrypt functions with
 // X25519Recipient and X25519Identity. If passphrase encryption is required, use
 // ScryptRecipient and ScryptIdentity. For compatibility with existing SSH keys
-// use the github.com/TahlonBrahic/nixage/agessh package.
+// use the filippo.io/age/agessh package.
 //
 // age encrypted files are binary and not malleable. For encoding them as text,
-// use the github.com/TahlonBrahic/nixage/armor package.
+// use the filippo.io/age/armor package.
 //
 // # Key management
 //
@@ -53,8 +53,8 @@ import (
 	"io"
 	"sort"
 
-	"github.com/TahlonBrahic/nixage/internal/format"
-	"github.com/TahlonBrahic/nixage/internal/stream"
+	"filippo.io/age/internal/format"
+	"filippo.io/age/internal/stream"
 )
 
 // An Identity is passed to Decrypt to unwrap an opaque file key from a

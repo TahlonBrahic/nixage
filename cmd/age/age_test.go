@@ -6,20 +6,19 @@ package main
 
 import (
 	"bufio"
-	"github.com/TahlonBrahic/nixage/tui"
 	"os"
 	"testing"
 
-	"github.com/TahlonBrahic/nixage"
+	"filippo.io/age"
 	"github.com/rogpeppe/go-internal/testscript"
 )
 
 func TestMain(m *testing.M) {
 	os.Exit(testscript.RunMain(m, map[string]func() int{
 		"age": func() (exitCode int) {
-			tui.TestOnlyPanicInsteadOfExit = true
+			testOnlyPanicInsteadOfExit = true
 			defer func() {
-				if tui.TestOnlyDidExit {
+				if testOnlyDidExit {
 					exitCode = recover().(int)
 				}
 			}()

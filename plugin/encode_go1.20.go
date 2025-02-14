@@ -10,7 +10,7 @@ import (
 	"crypto/ecdh"
 	"fmt"
 
-	"github.com/TahlonBrahic/nixage/internal/bech32"
+	"filippo.io/age/internal/bech32"
 )
 
 // EncodeX25519Recipient encodes a native X25519 recipient from a

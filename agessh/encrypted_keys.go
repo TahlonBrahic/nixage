@@ -10,7 +10,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 
-	"github.com/TahlonBrahic/nixage"
+	"filippo.io/age"
 	"golang.org/x/crypto/ssh"
 )
 

@@ -9,7 +9,7 @@ import (
 	"crypto/rand"
 	"testing"
 
-	"github.com/TahlonBrahic/nixage"
+	"filippo.io/age"
 )
 
 func TestX25519RoundTrip(t *testing.T) {

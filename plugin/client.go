@@ -20,8 +20,8 @@ import (
 
 	exec "golang.org/x/sys/execabs"
 
-	"github.com/TahlonBrahic/nixage"
-	"github.com/TahlonBrahic/nixage/internal/format"
+	"filippo.io/age"
+	"filippo.io/age/internal/format"
 )
 
 type Recipient struct {

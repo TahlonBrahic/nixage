@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/TahlonBrahic/nixage/tui"
 	"io"
 	"os"
 	"path/filepath"
@@ -17,10 +16,10 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/TahlonBrahic/nixage"
-	"github.com/TahlonBrahic/nixage/agessh"
-	"github.com/TahlonBrahic/nixage/armor"
-	"github.com/TahlonBrahic/nixage/plugin"
+	"filippo.io/age"
+	"filippo.io/age/agessh"
+	"filippo.io/age/armor"
+	"filippo.io/age/plugin"
 	"golang.org/x/term"
 )
 
@@ -105,7 +104,7 @@ func main() {
 
 	if len(os.Args) == 1 {
 		flag.Usage()
-		tui.Exit(1)
+		exit(1)
 	}
 
 	var (
@@ -181,47 +180,47 @@ func main() {
 			hints = append(hints, "only a single input file may be specified at a time")
 		}
 
-		tui.ErrorWithHint("too many INPUT arguments: "+quotedArgs, hints...)
+		errorWithHint("too many INPUT arguments: "+quotedArgs, hints...)
 	}
 
 	switch {
 	case decryptFlag:
 		if encryptFlag {
-			tui.Errorf("-e/--encrypt can't be used with -d/--decrypt")
+			errorf("-e/--encrypt can't be used with -d/--decrypt")
 		}
 		if armorFlag {
-			tui.ErrorWithHint("-a/--armor can't be used with -d/--decrypt",
+			errorWithHint("-a/--armor can't be used with -d/--decrypt",
 				"note that armored files are detected automatically")
 		}
 		if passFlag {
-			tui.ErrorWithHint("-p/--passphrase can't be used with -d/--decrypt",
+			errorWithHint("-p/--passphrase can't be used with -d/--decrypt",
 				"note that password protected files are detected automatically")
 		}
 		if len(recipientFlags) > 0 {
-			tui.ErrorWithHint("-r/--recipient can't be used with -d/--decrypt",
+			errorWithHint("-r/--recipient can't be used with -d/--decrypt",
 				"did you mean to use -i/--identity to specify a private key?")
 		}
 		if len(recipientsFileFlags) > 0 {
-			tui.ErrorWithHint("-R/--recipients-file can't be used with -d/--decrypt",
+			errorWithHint("-R/--recipients-file can't be used with -d/--decrypt",
 				"did you mean to use -i/--identity to specify a private key?")
 		}
 	default: // encrypt
 		if len(identityFlags) > 0 && !encryptFlag {
-			tui.ErrorWithHint("-i/--identity and -j can't be used in encryption mode unless symmetric encryption is explicitly selected with -e/--encrypt",
+			errorWithHint("-i/--identity and -j can't be used in encryption mode unless symmetric encryption is explicitly selected with -e/--encrypt",
 				"did you forget to specify -d/--decrypt?")
 		}
 		if len(recipientFlags)+len(recipientsFileFlags)+len(identityFlags) == 0 && !passFlag {
-			tui.ErrorWithHint("missing recipients",
+			errorWithHint("missing recipients",
 				"did you forget to specify -r/--recipient, -R/--recipients-file or -p/--passphrase?")
 		}
 		if len(recipientFlags) > 0 && passFlag {
-			tui.Errorf("-p/--passphrase can't be combined with -r/--recipient")
+			errorf("-p/--passphrase can't be combined with -r/--recipient")
 		}
 		if len(recipientsFileFlags) > 0 && passFlag {
-			tui.Errorf("-p/--passphrase can't be combined with -R/--recipients-file")
+			errorf("-p/--passphrase can't be combined with -R/--recipients-file")
 		}
 		if len(identityFlags) > 0 && passFlag {
-			tui.Errorf("-p/--passphrase can't be combined with -i/--identity and -j")
+			errorf("-p/--passphrase can't be combined with -i/--identity and -j")
 		}
 	}
 
@@ -242,7 +241,7 @@ func main() {
 		inUseFiles = append(inUseFiles, absPath(name))
 		f, err := os.Open(name)
 		if err != nil {
-			tui.Errorf("failed to open input file %q: %v", name, err)
+			errorf("failed to open input file %q: %v", name, err)
 		}
 		defer f.Close()
 		in = f
@@ -252,9 +251,9 @@ func main() {
 			// If the input comes from a TTY, assume it's armored, and buffer up
 			// to the END line (or EOF/EOT) so that a password prompt or the
 			// output don't get in the way of typing the input. See Issue 364.
-			buf, err := tui.BufferTerminalInput(in)
+			buf, err := bufferTerminalInput(in)
 			if err != nil {
-				tui.Errorf("failed to buffer terminal input: %v", err)
+				errorf("failed to buffer terminal input: %v", err)
 			}
 			in = buf
 		}
@@ -262,13 +261,13 @@ func main() {
 	if name := outFlag; name != "" && name != "-" {
 		for _, f := range inUseFiles {
 			if f == absPath(name) {
-				tui.Errorf("input and output file are the same: %q", name)
+				errorf("input and output file are the same: %q", name)
 			}
 		}
 		f := newLazyOpener(name)
 		defer func() {
 			if err := f.Close(); err != nil {
-				tui.Errorf("failed to close output file %q: %v", name, err)
+				errorf("failed to close output file %q: %v", name, err)
 			}
 		}()
 		out = f
@@ -279,7 +278,7 @@ func main() {
 			} else if !armorFlag {
 				// If the output wouldn't be armored, refuse to send binary to
 				// the terminal unless explicitly requested with "-o -".
-				tui.ErrorWithHint("refusing to output binary to the terminal",
+				errorWithHint("refusing to output binary to the terminal",
 					"did you mean to use -a/--armor?",
 					`force anyway with "-o -"`)
 			}
@@ -306,7 +305,7 @@ func main() {
 }
 
 func passphrasePromptForEncryption() (string, error) {
-	pass, err := tui.ReadSecret("Enter passphrase (leave empty to autogenerate a secure one):")
+	pass, err := readSecret("Enter passphrase (leave empty to autogenerate a secure one):")
 	if err != nil {
 		return "", fmt.Errorf("could not read passphrase: %v", err)
 	}
@@ -317,12 +316,12 @@ func passphrasePromptForEncryption() (string, error) {
 			words = append(words, randomWord())
 		}
 		p = strings.Join(words, "-")
-		err := tui.PrintfToTerminal("using autogenerated passphrase %q", p)
+		err := printfToTerminal("using autogenerated passphrase %q", p)
 		if err != nil {
 			return "", fmt.Errorf("could not print passphrase: %v", err)
 		}
 	} else {
-		confirm, err := tui.ReadSecret("Confirm passphrase:")
+		confirm, err := readSecret("Confirm passphrase:")
 		if err != nil {
 			return "", fmt.Errorf("could not read passphrase: %v", err)
 		}
@@ -338,19 +337,19 @@ func encryptNotPass(recs, files []string, identities identityFlags, in io.Reader
 	for _, arg := range recs {
 		r, err := parseRecipient(arg)
 		if err, ok := err.(gitHubRecipientError); ok {
-			tui.ErrorWithHint(err.Error(), "instead, use recipient files like",
+			errorWithHint(err.Error(), "instead, use recipient files like",
 				"    curl -O https://github.com/"+err.username+".keys",
 				"    age -R "+err.username+".keys")
 		}
 		if err != nil {
-			tui.Errorf("%v", err)
+			errorf("%v", err)
 		}
 		recipients = append(recipients, r)
 	}
 	for _, name := range files {
 		recs, err := parseRecipientsFile(name)
 		if err != nil {
-			tui.Errorf("failed to parse recipient file %q: %v", name, err)
+			errorf("failed to parse recipient file %q: %v", name, err)
 		}
 		recipients = append(recipients, recs...)
 	}
@@ -359,17 +358,17 @@ func encryptNotPass(recs, files []string, identities identityFlags, in io.Reader
 		case "i":
 			ids, err := parseIdentitiesFile(f.Value)
 			if err != nil {
-				tui.Errorf("reading %q: %v", f.Value, err)
+				errorf("reading %q: %v", f.Value, err)
 			}
 			r, err := identitiesToRecipients(ids)
 			if err != nil {
-				tui.Errorf("internal error processing %q: %v", f.Value, err)
+				errorf("internal error processing %q: %v", f.Value, err)
 			}
 			recipients = append(recipients, r...)
 		case "j":
-			id, err := plugin.NewIdentityWithoutData(f.Value, tui.PluginTerminalUI)
+			id, err := plugin.NewIdentityWithoutData(f.Value, pluginTerminalUI)
 			if err != nil {
-				tui.Errorf("initializing %q: %v", f.Value, err)
+				errorf("initializing %q: %v", f.Value, err)
 			}
 			recipients = append(recipients, id.Recipient())
 		}
@@ -380,12 +379,12 @@ func encryptNotPass(recs, files []string, identities identityFlags, in io.Reader
 func encryptPass(in io.Reader, out io.Writer, armor bool) {
 	pass, err := passphrasePromptForEncryption()
 	if err != nil {
-		tui.Errorf("%v", err)
+		errorf("%v", err)
 	}
 
 	r, err := age.NewScryptRecipient(pass)
 	if err != nil {
-		tui.Errorf("%v", err)
+		errorf("%v", err)
 	}
 	testOnlyConfigureScryptIdentity(r)
 	encrypt([]age.Recipient{r}, in, out, armor)
@@ -398,20 +397,20 @@ func encrypt(recipients []age.Recipient, in io.Reader, out io.Writer, withArmor 
 		a := armor.NewWriter(out)
 		defer func() {
 			if err := a.Close(); err != nil {
-				tui.Errorf("%v", err)
+				errorf("%v", err)
 			}
 		}()
 		out = a
 	}
 	w, err := age.Encrypt(out, recipients...)
 	if err != nil {
-		tui.Errorf("%v", err)
+		errorf("%v", err)
 	}
 	if _, err := io.Copy(w, in); err != nil {
-		tui.Errorf("%v", err)
+		errorf("%v", err)
 	}
 	if err := w.Close(); err != nil {
-		tui.Errorf("%v", err)
+		errorf("%v", err)
 	}
 }
 
@@ -427,7 +426,7 @@ func (rejectScryptIdentity) Unwrap(stanzas []*age.Stanza) ([]byte, error) {
 	if len(stanzas) != 1 || stanzas[0].Type != "scrypt" {
 		return nil, age.ErrIncorrectIdentity
 	}
-	tui.ErrorWithHint("file is passphrase-encrypted but identities were specified with -i/--identity or -j",
+	errorWithHint("file is passphrase-encrypted but identities were specified with -i/--identity or -j",
 		"remove all -i/--identity/-j flags to decrypt passphrase-encrypted files")
 	panic("unreachable")
 }
@@ -440,13 +439,13 @@ func decryptNotPass(flags identityFlags, in io.Reader, out io.Writer) {
 		case "i":
 			ids, err := parseIdentitiesFile(f.Value)
 			if err != nil {
-				tui.Errorf("reading %q: %v", f.Value, err)
+				errorf("reading %q: %v", f.Value, err)
 			}
 			identities = append(identities, ids...)
 		case "j":
-			id, err := plugin.NewIdentityWithoutData(f.Value, tui.PluginTerminalUI)
+			id, err := plugin.NewIdentityWithoutData(f.Value, pluginTerminalUI)
 			if err != nil {
-				tui.Errorf("initializing %q: %v", f.Value, err)
+				errorf("initializing %q: %v", f.Value, err)
 			}
 			identities = append(identities, id)
 		}
@@ -469,7 +468,7 @@ func decrypt(identities []age.Identity, in io.Reader, out io.Writer) {
 	rr := bufio.NewReader(in)
 	if intro, _ := rr.Peek(len(crlfMangledIntro)); string(intro) == crlfMangledIntro ||
 		string(intro) == utf16MangledIntro {
-		tui.ErrorWithHint("invalid header intro",
+		errorWithHint("invalid header intro",
 			"it looks like this file was corrupted by PowerShell redirection",
 			"consider using -o or -a to encrypt files in PowerShell")
 	}
@@ -482,16 +481,16 @@ func decrypt(identities []age.Identity, in io.Reader, out io.Writer) {
 
 	r, err := age.Decrypt(in, identities...)
 	if err != nil {
-		tui.Errorf("%v", err)
+		errorf("%v", err)
 	}
 	out.Write(nil) // trigger the lazyOpener even if r is empty
 	if _, err := io.Copy(out, r); err != nil {
-		tui.Errorf("%v", err)
+		errorf("%v", err)
 	}
 }
 
 func passphrasePromptForDecryption() (string, error) {
-	pass, err := tui.ReadSecret("Enter passphrase:")
+	pass, err := readSecret("Enter passphrase:")
 	if err != nil {
 		return "", fmt.Errorf("could not read passphrase: %v", err)
 	}
